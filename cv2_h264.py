@@ -30,6 +30,11 @@ stream_url = f'http://{CAM_USER}:{CAM_PASS}@{CAM_HOST}:{CAM_PORT}/video.cgi'
 # Create a VideoCapture object
 cap = cv2.VideoCapture(stream_url)
 
+# Define the codec and create VideoWriter object
+fourcc = cv2.VideoWriter_fourcc(*'XVID')
+out = cv2.VideoWriter('output.avi', fourcc, 20.0, (640, 480))
+record_count=0
+
 # Check if camera opened successfully
 if not cap.isOpened():
     print("Error: Could not open video stream.")
@@ -41,6 +46,10 @@ else:
         if ret:
             # Display the resulting frame
             cv2.imshow('Video Stream', frame)
+            if record_count>0:
+                # Write the frame into the file 'output.avi'
+                out.write(frame)
+                record_count -= 1
 
         # Wait for a key press and extract the last byte
         key = cv2.waitKeyEx(1)
@@ -68,10 +77,15 @@ else:
         elif key&0xFF == 45:  # '-'
             zoom -= 1
             if zoom<0: zoom=0
+        elif key&0xFF == ord('r'):
+            if record_count==0: record_count=1000 # Record 1000 frames
+            else: record_count=0 # Stop recording
         else: key = 0
         if key!=0:
             r = ipcam.set_ptz(pan, tile, zoom)
             #print(r)
+
+out.release()
 # When everything done, release the video capture object
 cap.release()
 
